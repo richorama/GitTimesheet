@@ -22,8 +22,6 @@ class Program
                 Console.WriteLine(line);
             }
         }
-
-        Console.ReadKey();
     }
 
     static IEnumerable<KeyValuePair<string, string>> ParseArgs(string[] args)

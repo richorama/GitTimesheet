@@ -58,7 +58,7 @@ class Program
                 foreach (var month in subsetByYear.Where(x => x.Committer.When.Year == year).Select(x => x.Committer.When.Month).Distinct().OrderBy(x => x))
                 {
                     var subsetByMonth = subsetByYear.Where(x => x.Committer.When.Month == month).ToArray();
-                    yield return $"  {commiter}'s commits for {new DateTime(year, month, 1).ToString("MMMM")}";
+                    yield return $"  {commiter}'s commits for {new DateTime(year, month, 1).ToString("MMMM")} {year}";
 
                     var count = 0;
                     // we're at a month for a given commiter

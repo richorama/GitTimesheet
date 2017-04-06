@@ -7,8 +7,27 @@ using System.Linq;
 class Program
 {
 
-    static void Main(string[] args)
+    static void Main(string[] vargs)
     {
+        var args = vargs.Select(x => x.ToLower()).ToArray();
+
+        if (args.Contains("-help") || args.Contains("--help") || args.Contains("-h") || args.Contains("-?") || args.Contains("/?"))
+        {
+            Console.WriteLine(@"
+GitTimesheet
+
+Optional arguments:
+    
+    -month 12              (shows activity in December)
+    -year 2017             (shows activity in 2017)
+    -user dave@hotmail.com (shows activity of a single user)
+
+By default, all activity for the current month is shown
+");
+            return;
+        }
+        
+
         var parsedArgs = ParseArgs(args).ToArray();
         var year = int.Parse(parsedArgs.GetOrDefault("-year", DateTime.UtcNow.Year.ToString()));
         var month = int.Parse(parsedArgs.GetOrDefault("-month", DateTime.UtcNow.Month.ToString()));

@@ -35,6 +35,8 @@ By default, all activity for the current month is shown
 
         foreach (var repoDir in repos)
         {
+            if (repos.Length > 1) Console.WriteLine(repoDir);
+
             using (var repo = new Repository(repoDir))
             {
                 if (user == "me")

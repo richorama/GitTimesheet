@@ -1,7 +1,6 @@
 ﻿using LibGit2Sharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 class Program
@@ -32,13 +31,23 @@ By default, all activity for the current month is shown
         var year = int.Parse(parsedArgs.GetOrDefault("-year", DateTime.UtcNow.Year.ToString()));
         var month = int.Parse(parsedArgs.GetOrDefault("-month", DateTime.UtcNow.Month.ToString()));
         var user = parsedArgs.GetOrDefault("-user", "").ToLower();
+        var repos = parsedArgs.GetOrDefault("-dir", ".").Split(',');
 
-        using (var repo = new Repository(Directory.GetCurrentDirectory()))
+        foreach (var repoDir in repos)
         {
-            var query = GetAllPeriods(repo, year, month, user);
-            foreach (var line in FormatTimesheets(query.ToArray()))
+            using (var repo = new Repository(repoDir))
             {
-                Console.WriteLine(line);
+                if (user == "me")
+                {
+                    var userConfigValue = repo.Config.FirstOrDefault(x => x.Key == "user.email");
+                    if (null != userConfigValue) user = userConfigValue.Value;
+                }
+
+                var query = GetAllPeriods(repo, year, month, user);
+                foreach (var line in FormatTimesheets(query.ToArray()))
+                {
+                    Console.WriteLine(line);
+                }
             }
         }
     }

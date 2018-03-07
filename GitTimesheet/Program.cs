@@ -30,8 +30,11 @@ By default, all activity for the current month is shown
         var parsedArgs = ParseArgs(args).ToArray();
         var year = int.Parse(parsedArgs.GetOrDefault("-year", DateTime.UtcNow.Year.ToString()));
         var month = int.Parse(parsedArgs.GetOrDefault("-month", DateTime.UtcNow.Month.ToString()));
+        var days = int.Parse(parsedArgs.GetOrDefault("-days", "0"));
         var user = parsedArgs.GetOrDefault("-user", "").ToLower();
-        var repos = parsedArgs.GetOrDefault("-dir", ".").Split(',');
+        var repos = parsedArgs.GetOrDefault("-dir", ".").Split(',').Select(x => x.Trim()).ToArray();
+        var format = parsedArgs.GetOrDefault("-format", "report");
+
 
         foreach (var repoDir in repos)
         {
@@ -45,10 +48,22 @@ By default, all activity for the current month is shown
                     if (null != userConfigValue) user = userConfigValue.Value;
                 }
 
-                var query = GetAllPeriods(repo, year, month, user);
-                foreach (var line in FormatTimesheets(query.ToArray()))
+                var query = days > 0 ? GetLastNDays(repo, days, user) : GetAllPeriods(repo, year, month, user);
+
+                if (format == "report")
                 {
-                    Console.WriteLine(line);
+
+                    foreach (var line in FormatTimesheets(query.ToArray()))
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+                else
+                {
+                    foreach (var line in FormatSummary(query.ToArray()))
+                    {
+                        Console.WriteLine(line);
+                    }
                 }
             }
         }
@@ -72,6 +87,37 @@ By default, all activity for the current month is shown
         if (month != -1) query = query.Where(x => x.Committer.When.ToLocalTime().Month == month);
 
         return query;
+    }
+
+
+    static IEnumerable<Commit> GetLastNDays(Repository repo, int days, string userEmail = null)
+    {
+        IEnumerable<Commit> query = repo.Commits;
+        var startDate = DateTimeOffset.Now.AddDays(-days); ;
+        if (!string.IsNullOrWhiteSpace(userEmail)) query = query.Where(x => x.Committer.Email == userEmail);
+        query = query.Where(x => x.Committer.When.ToLocalTime() > startDate);
+
+        return query;
+    }
+
+
+    static IEnumerable<string> FormatSummary(Commit[] commits)
+    {
+        var commiters = commits.Select(x => x.Committer.Email.ToLower()).Distinct().ToArray();
+        foreach (var commiter in commiters)
+        {
+            yield return $"Commits by {commiter}";
+            var subsetByCommitter = commits.Where(x => x.Committer.Email.ToLower() == commiter).ToArray();
+            foreach (var commitsByDay in subsetByCommitter.GroupBy(x => x.Committer.When.ToString("yyyy-MM-dd ddd")))
+            {
+                yield return $"Commits on {commitsByDay.Key}";
+                foreach (var commit in commitsByDay)
+                {
+                    yield return $"  {commit.MessageShort}";
+                }
+
+            }
+        }
     }
 
     static IEnumerable<string> FormatTimesheets(Commit[] commits)

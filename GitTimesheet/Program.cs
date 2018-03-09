@@ -37,6 +37,7 @@ class Program
         {
             Console.WriteLine(summary);
         }
+        Console.ResetColor();
     }
 
 
@@ -45,7 +46,13 @@ class Program
     {
         foreach (var repoDir in repos)
         {
+            if (!Directory.Exists(repoDir))
+            {
+                Console.WriteLine($"Error: {repoDir} does not exist.");
+            }
+
             var repoName = Directory.GetParent(Path.Combine(repoDir, ".git")).Name;
+            
             using (var repo = new Repository(repoDir))
             {
                 var user = "";
@@ -71,7 +78,9 @@ class Program
         for (var i = 0; i <= days; i++)
         {
             var day = startDate.AddDays(i).Date;
+            Console.ForegroundColor = System.ConsoleColor.Yellow;
             yield return $"{day:yyyy-MM-dd ddd}";
+            Console.ForegroundColor = System.ConsoleColor.Cyan;
 
             var any = false;
             foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}\{x.Branch}"))
@@ -82,6 +91,7 @@ class Program
 
             if (!any)
             {
+                Console.ForegroundColor = System.ConsoleColor.Gray;
                 yield return "  --none--";
             }
             yield return "";

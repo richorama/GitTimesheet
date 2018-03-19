@@ -9,15 +9,17 @@ class Program
 
     class CommitDetails
     {
-        public CommitDetails(DateTimeOffset date, string repo, string branch)
+        public CommitDetails(DateTimeOffset date, string repo, string branch, string message)
         {
             this.Date = date.Date.Date;
             this.Repository = repo;
             this.Branch = branch;
+            this.Message = message;
         }
         public DateTime Date { get; set; }
         public string Repository { get; set; }
         public string Branch { get; set; }
+        public string Message { get; set; }
     }
 
 
@@ -65,7 +67,7 @@ class Program
                     if (branch.Tip.Committer.When < startDate) continue;
                     foreach (var commit in branch.Commits.Where(x => x.Committer.When > startDate && x.Committer.Email == user))
                     {
-                        yield return new CommitDetails(commit.Committer.When, repoName, branch.FriendlyName);
+                        yield return new CommitDetails(commit.Committer.When, repoName, branch.FriendlyName, commit.MessageShort);
                     }
                 }
 
@@ -80,14 +82,26 @@ class Program
             var day = startDate.AddDays(i).Date;
             Console.ForegroundColor = System.ConsoleColor.Yellow;
             yield return $"{day:yyyy-MM-dd ddd}";
-            Console.ForegroundColor = System.ConsoleColor.Cyan;
+            
 
             var any = false;
             foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}\{x.Branch}"))
             {
+
+                Console.ForegroundColor = System.ConsoleColor.Cyan;
                 any = true;
                 yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()}";
+
+
+                Console.ForegroundColor = System.ConsoleColor.Green;
+                foreach (var commit in commitsOnThisDay)
+                {
+                    yield return $"    * {commit.Message}";
+                }
+
             }
+
+            
 
             if (!any)
             {

@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/8mmlr37e0khup7wc/branch/master?svg=true)](https://ci.appveyor.com/project/richorama/gittimesheet/branch/master)
+
 # Git Timesheet
 
 Creates a timesheet report using your git history

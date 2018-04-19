@@ -96,7 +96,7 @@ class Program
 
 
                 Console.ForegroundColor = System.ConsoleColor.Green;
-                foreach (var commit in commitsOnThisDay)
+                foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time))
                 {
                     yield return $"    {commit.Time:HH:mm} => {commit.Message}";
                 }

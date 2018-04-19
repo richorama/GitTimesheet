@@ -12,14 +12,16 @@ class Program
         public CommitDetails(DateTimeOffset date, string repo, string branch, string message)
         {
             this.Date = date.Date.Date;
+            this.Time = date.DateTime;
             this.Repository = repo;
             this.Branch = branch;
             this.Message = message;
         }
-        public DateTime Date { get; set; }
-        public string Repository { get; set; }
-        public string Branch { get; set; }
-        public string Message { get; set; }
+        public DateTime Date { get; private set; }
+        public DateTime Time { get; private set; }
+        public string Repository { get; private set; }
+        public string Branch { get; private set; }
+        public string Message { get; private set; }
     }
 
 
@@ -96,7 +98,7 @@ class Program
                 Console.ForegroundColor = System.ConsoleColor.Green;
                 foreach (var commit in commitsOnThisDay)
                 {
-                    yield return $"    @ {commit.Date:hh:mm} {commit.Message}";
+                    yield return $"    {commit.Time:HH:mm} => {commit.Message}";
                 }
 
             }

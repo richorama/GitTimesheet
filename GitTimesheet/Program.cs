@@ -25,15 +25,20 @@ class Program
     }
 
 
+    
+
+
     static void Main(string[] args)
     {
-        var repos = args;
+        var repos = args.GetDirectoryNames().ToArray();
         if (!args.Any())
         {
             repos = new string[] { "." };
         }
 
-        var days = 7;
+
+        var parsedArgs = args.ParseArgs().ToArray();
+        var days = int.Parse(parsedArgs.GetOrDefault("-days", "7"));
 
         var startDate = new DateTimeOffset(DateTime.Now.AddDays(-days).Date);
         var commits = Query(startDate, repos).ToArray();
@@ -113,11 +118,33 @@ class Program
             yield return "";
 
         }
-
-
     }
-
-
-
 }
 
+public static class Extensions
+{
+    public static string GetOrDefault(this KeyValuePair<string, string>[] values, string key, string defaultValue)
+    {
+        if (!values.Any(x => x.Key == key)) return defaultValue;
+        return values.First(x => x.Key == key).Value;
+    }
+
+    public static IEnumerable<string> GetDirectoryNames(this string[] args)
+    {
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].StartsWith("-")) continue;
+            if (i > 0 && args[i - 1].StartsWith("-")) continue;
+            yield return args[i];
+        }
+    }
+
+    public static IEnumerable<KeyValuePair<string, string>> ParseArgs(this string[] args)
+    {
+        
+        for (var i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i].StartsWith("-")) yield return new KeyValuePair<string, string>(args[i], args[i + 1]);
+        }
+    }
+}

@@ -58,6 +58,7 @@ class Program
             if (!Directory.Exists(repoDir))
             {
                 Console.WriteLine($"Error: {repoDir} does not exist.");
+                yield break;
             }
 
             var repoName = Directory.GetParent(Path.Combine(repoDir, ".git")).Name;

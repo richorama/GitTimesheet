@@ -93,7 +93,7 @@ class Program
             
 
             var any = false;
-            foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}\{x.Branch}"))
+            foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}/{x.Branch}"))
             {
 
                 Console.ForegroundColor = System.ConsoleColor.Cyan;

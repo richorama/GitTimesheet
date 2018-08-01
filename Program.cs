@@ -36,13 +36,13 @@ class Program
             repos = new string[] { "." };
         }
 
-
         var parsedArgs = args.ParseArgs().ToArray();
         var days = int.Parse(parsedArgs.GetOrDefault("-days", "7"));
+        var max = int.Parse(parsedArgs.GetOrDefault("-max", "10"));
 
         var startDate = new DateTimeOffset(DateTime.Now.AddDays(-days).Date);
         var commits = Query(startDate, repos).ToArray();
-        foreach (var summary in ToSummary(commits, startDate, days))
+        foreach (var summary in ToSummary(commits, startDate, days, max))
         {
             Console.WriteLine(summary);
         }
@@ -83,7 +83,7 @@ class Program
         }
     }
 
-    static IEnumerable<string> ToSummary(IEnumerable<CommitDetails> commits, DateTimeOffset startDate, int days)
+    static IEnumerable<string> ToSummary(IEnumerable<CommitDetails> commits, DateTimeOffset startDate, int days, int maximumNumberOfCommitsToDisplay)
     {
         for (var i = 0; i <= days; i++)
         {
@@ -91,25 +91,19 @@ class Program
             Console.ForegroundColor = System.ConsoleColor.Yellow;
             yield return $"{day:yyyy-MM-dd ddd}";
             
-
             var any = false;
             foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}/{x.Branch}"))
             {
-
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
                 any = true;
                 yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()}";
 
-
                 Console.ForegroundColor = System.ConsoleColor.Green;
-                foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time))
+                foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time).Take(maximumNumberOfCommitsToDisplay))
                 {
                     yield return $"    {commit.Time:HH:mm} => {commit.Message}";
                 }
-
             }
-
-            
 
             if (!any)
             {
@@ -142,7 +136,6 @@ public static class Extensions
 
     public static IEnumerable<KeyValuePair<string, string>> ParseArgs(this string[] args)
     {
-        
         for (var i = 0; i < args.Length - 1; i++)
         {
             if (args[i].StartsWith("-")) yield return new KeyValuePair<string, string>(args[i], args[i + 1]);

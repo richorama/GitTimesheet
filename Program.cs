@@ -96,7 +96,7 @@ class Program
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
                 any = true;
-                yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()}";
+                yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()} {(commitsOnThisDay.Count() == 1 ? "commit" :"commits")}";
 
                 Console.ForegroundColor = System.ConsoleColor.Green;
                 foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time).Take(maximumNumberOfCommitsToDisplay))

@@ -3,9 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 class Program
 {
+    #region Commit Data
+
     class CommitDetails
     {
         public CommitDetails(DateTimeOffset date, string repo, string branch, string message)
@@ -24,6 +27,37 @@ class Program
         public string Message { get; private set; }
     }
 
+    #endregion
+
+    #region Json Serialization Data
+
+    class CommitTimeSheets
+    {
+        public class MetaData
+        {
+            public int Days { get; set; }
+            public int MaxNumberOfCommitsToDisplay { get; set; }
+        }
+
+        public List<CommitTimeSheet> Timesheets { get; set; }
+        public MetaData Meta { get; set; }
+    }
+
+    class CommitTimeSheet
+    {
+        public class CommitInfo
+        {
+            public string Time { get; set; }
+            public string Description { get; set; }
+            public List<CommitDetails> Details { get; set; }
+        }
+
+        public DateTimeOffset StartDate { get; set; }
+        public List<CommitInfo> Commits { get; set; }
+    }
+
+    #endregion
+
     static void Main(string[] args)
     {
         var repos = args.GetDirectoryNames().ToArray();
@@ -38,15 +72,96 @@ class Program
         var parsedArgs = args.ParseArgs().ToArray();
         var days = int.Parse(parsedArgs.GetOrDefault("-days", "7"));
         var max = int.Parse(parsedArgs.GetOrDefault("-max", "10"));
+        var format = parsedArgs.GetOrDefault("-format", "summary");
 
         var startDate = new DateTimeOffset(DateTime.Now.AddDays(-days).Date);
         var commits = Query(startDate, repos).ToArray();
-        foreach (var summary in ToSummary(commits, startDate, days, max))
+
+        switch (format)
         {
-            Console.WriteLine(summary);
+            case "summary":
+                PrintSummary(commits, startDate, days, max);
+                break;
+
+            case "json":
+                PrintJson(commits, startDate, days, max);
+                break;
+
+            default:
+                throw new ArgumentException($"Unhandled format '{format}' was used. Supported formats are: 'summary' and 'json'.");
         }
 
         Console.ResetColor();
+    }
+
+    static void PrintSummary(IEnumerable<CommitDetails> commits, DateTimeOffset startDate, int days, int maximumNumberOfCommitsToDisplay)
+    {
+        foreach (var summary in ToSummary(commits, startDate, days, maximumNumberOfCommitsToDisplay))
+        {
+            Console.WriteLine(summary);
+        }
+    }
+
+    static void PrintJson(IEnumerable<CommitDetails> commits, DateTimeOffset startDate, int days, int maximumNumberOfCommitsToDisplay)
+    {
+        // JSON Serialization Options
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
+        // Data structure that will be serialized and outputted in the end
+        var timesheets = new CommitTimeSheets
+        {
+            Timesheets = new List<CommitTimeSheet>(),
+            Meta = new CommitTimeSheets.MetaData
+            {
+                Days = days,
+                MaxNumberOfCommitsToDisplay = maximumNumberOfCommitsToDisplay
+            }
+        };
+
+        var commitDetails = commits as CommitDetails[] ?? commits.ToArray();
+
+        for (var i = 0; i <= days; i++)
+        {
+            var day = startDate.AddDays(i).Date;
+
+            var summary = new CommitTimeSheet
+            {
+                StartDate = day,
+                Commits = new List<CommitTimeSheet.CommitInfo>(),
+            };
+
+            // Save to list for later serialization
+            timesheets.Timesheets.Add(summary);
+
+            var commitInfo = new CommitTimeSheet.CommitInfo
+            {
+                Time = $"{day:yyyy-MM-dd ddd}",
+                Details = new List<CommitDetails>()
+            };
+
+            summary.Commits.Add(commitInfo);
+
+            var dailyCommitsGroup = commitDetails.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}/{x.Branch}");
+            foreach (var commitsOnThisDay in dailyCommitsGroup)
+            {
+                // summary.CommitGroupings = commitsOnThisDay;
+                commitInfo.Description = $"{commitsOnThisDay.Key} : {commitsOnThisDay.Count()} {(commitsOnThisDay.Count() == 1 ? "commit" : "commits")}";
+
+                foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time).Take(maximumNumberOfCommitsToDisplay))
+                {
+                    commitInfo.Details.Add(commit);
+                }
+            }
+        }
+
+        var json = JsonSerializer.Serialize(timesheets, options);
+
+        // Write to stdout
+        Console.Write(json);
     }
 
     static IEnumerable<CommitDetails> Query(DateTimeOffset startDate, params string[] repos)

@@ -54,14 +54,14 @@ Creates a timesheet report using your git history
           "time": "2020-06-20T10:41:34",
           "repository": "{{ REPO_NAME }}",
           "branch": "{{ BRANCH_NAME }}",
-          "message": "{{ MESSAGE }}"
+          "message": "{{ COMMIT_MESSAGE }}"
         },
         {
           "date": "2020-06-20T00:00:00",
           "time": "2020-06-20T10:43:27",
           "repository": "{{ REPO_NAME }}",
           "branch": "{{ BRANCH_NAME }}",
-          "message": "{{ MESSAGE }}"
+          "message": "{{ COMMIT_MESSAGE }}"
         }
       ]
     }

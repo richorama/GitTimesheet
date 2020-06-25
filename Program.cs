@@ -45,15 +45,17 @@ class Program
 
     class CommitTimeSheet
     {
-        public class CommitInfo
+        public class TimeSheetDurations
         {
-            public string Time { get; set; }
-            public string Description { get; set; }
-            public List<CommitDetails> Details { get; set; }
+            public string Hours { get; set; }
+            public string Minutes { get; set; }
+            public string Seconds { get; set; }
         }
 
         public DateTimeOffset StartDate { get; set; }
-        public List<CommitInfo> Commits { get; set; }
+
+        public TimeSheetDurations Durations { get; set; }
+        public List<CommitDetails> Commits { get; set; }
     }
 
     #endregion
@@ -101,7 +103,7 @@ class Program
             Console.WriteLine(summary);
         }
     }
-
+    
     static void PrintJson(IEnumerable<CommitDetails> commits, DateTimeOffset startDate, int days, int maximumNumberOfCommitsToDisplay)
     {
         // JSON Serialization Options
@@ -131,33 +133,40 @@ class Program
             var summary = new CommitTimeSheet
             {
                 StartDate = day,
-                Commits = new List<CommitTimeSheet.CommitInfo>(),
+                Commits = new List<CommitDetails>(),
             };
-
-            // Save to list for later serialization
-            timesheets.Timesheets.Add(summary);
-
-            var commitInfo = new CommitTimeSheet.CommitInfo
-            {
-                Time = $"{day:yyyy-MM-dd ddd}",
-                Details = new List<CommitDetails>()
-            };
-
-            summary.Commits.Add(commitInfo);
 
             var dailyCommitsGroup = commitDetails.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}/{x.Branch}");
             foreach (var commitsOnThisDay in dailyCommitsGroup)
             {
-                // summary.CommitGroupings = commitsOnThisDay;
-                commitInfo.Description = $"{commitsOnThisDay.Key} : {commitsOnThisDay.Count()} {(commitsOnThisDay.Count() == 1 ? "commit" : "commits")}";
-
                 foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time).Take(maximumNumberOfCommitsToDisplay))
                 {
-                    commitInfo.Details.Add(commit);
+                    summary.Commits.Add(commit);
                 }
+            }
+
+            // Skip days without commits
+            if (summary.Commits.Count > 0)
+            {
+                // Compute duration between first and last commit
+                var first = summary.Commits.First();
+                var last = summary.Commits.Last();
+                var diff = last.Time - first.Time;
+
+                // Save duration in various helpful formats
+                summary.Durations = new CommitTimeSheet.TimeSheetDurations
+                {
+                    Hours = diff.TotalHours.ToString("F"),
+                    Minutes = diff.TotalMinutes.ToString("F"),
+                    Seconds = diff.TotalSeconds.ToString("F"),
+                };
+                
+                // Save to list for later serialization
+                timesheets.Timesheets.Add(summary);
             }
         }
 
+        // Make it so!
         var json = JsonSerializer.Serialize(timesheets, options);
 
         // Write to stdout

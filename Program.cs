@@ -1,6 +1,7 @@
 ﻿using LibGit2Sharp;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -156,9 +157,9 @@ class Program
                 // Save duration in various helpful formats
                 summary.Durations = new CommitTimeSheet.TimeSheetDurations
                 {
-                    Hours = diff.TotalHours.ToString("F"),
-                    Minutes = diff.TotalMinutes.ToString("F"),
-                    Seconds = diff.TotalSeconds.ToString("F"),
+                    Hours = diff.TotalHours.ToString(CultureInfo.InvariantCulture),
+                    Minutes = diff.TotalMinutes.ToString(CultureInfo.InvariantCulture),
+                    Seconds = diff.TotalSeconds.ToString(CultureInfo.InvariantCulture),
                 };
                 
                 // Save to list for later serialization

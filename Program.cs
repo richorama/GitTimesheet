@@ -6,7 +6,6 @@ using System.Linq;
 
 class Program
 {
-
     class CommitDetails
     {
         public CommitDetails(DateTimeOffset date, string repo, string branch, string message)
@@ -17,6 +16,7 @@ class Program
             this.Branch = branch;
             this.Message = message;
         }
+
         public DateTime Date { get; private set; }
         public DateTime Time { get; private set; }
         public string Repository { get; private set; }
@@ -24,16 +24,15 @@ class Program
         public string Message { get; private set; }
     }
 
-
-    
-
-
     static void Main(string[] args)
     {
         var repos = args.GetDirectoryNames().ToArray();
         if (!args.Any())
         {
-            repos = new string[] { "." };
+            repos = new string[]
+            {
+                "."
+            };
         }
 
         var parsedArgs = args.ParseArgs().ToArray();
@@ -46,10 +45,9 @@ class Program
         {
             Console.WriteLine(summary);
         }
+
         Console.ResetColor();
     }
-
-
 
     static IEnumerable<CommitDetails> Query(DateTimeOffset startDate, params string[] repos)
     {
@@ -62,7 +60,7 @@ class Program
             }
 
             var repoName = Directory.GetParent(Path.Combine(repoDir, ".git")).Name;
-            
+
             using (var repo = new Repository(repoDir))
             {
                 var user = "";
@@ -78,7 +76,6 @@ class Program
                         yield return new CommitDetails(commit.Committer.When, repoName, branch.FriendlyName, commit.MessageShort);
                     }
                 }
-
             }
         }
     }
@@ -90,13 +87,13 @@ class Program
             var day = startDate.AddDays(i).Date;
             Console.ForegroundColor = System.ConsoleColor.Yellow;
             yield return $"{day:yyyy-MM-dd ddd}";
-            
+
             var any = false;
             foreach (var commitsOnThisDay in commits.Where(x => x.Date == day).GroupBy(x => $@"{x.Repository}/{x.Branch}"))
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
                 any = true;
-                yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()} {(commitsOnThisDay.Count() == 1 ? "commit" :"commits")}";
+                yield return $"  {commitsOnThisDay.Key} : {commitsOnThisDay.Count()} {(commitsOnThisDay.Count() == 1 ? "commit" : "commits")}";
 
                 Console.ForegroundColor = System.ConsoleColor.Green;
                 foreach (var commit in commitsOnThisDay.OrderBy(x => x.Time).Take(maximumNumberOfCommitsToDisplay))
@@ -110,8 +107,8 @@ class Program
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 yield return "  --none--";
             }
-            yield return "";
 
+            yield return "";
         }
     }
 }

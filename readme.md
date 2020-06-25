@@ -82,9 +82,11 @@ The `meta` key contains information about the some parameters that were passed t
 #### Pre-computed Durations
 The `timesheets[i].durations` object contains some useful precomputed values in `hours`, `minutes` and `seconds` representing the duration of time between the ***first*** and ***last*** commit as returned by the passed arguments.
 
-> Note:
+> **Note:**
 >
-> Please keep in mind that these pre-computed values **will vary** depending on the value used for the `max` command-line argument since these durations are computed relative to what is show and not the actual, complete state of the Git repository.
+> Please keep in mind that these pre-computed values **will vary** depending on the value used for the `max` command-line argument since they are computed relative to what is shown and not the actual complete state of the Git repository.
+>
+>For a more comprehensive view, one should choose a sensible value for the `max` argument to include a larger amount of commits in a given day than the default value.
 
 ## Usage
 
